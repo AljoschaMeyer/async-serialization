@@ -42,7 +42,7 @@ pub trait AsyncSerializeLen<W: AsyncWrite>
     : AsyncSerialize<W> + AsyncWriterFutureLen<W> {
     /// Compute the exact number of bytes that would be written in total if the given value was
     /// serialized.
-    fn total_bytes(&Self::Serialized) -> usize;
+    fn total_bytes(val: &Self::Serialized) -> usize;
 }
 
 /// A future that asynchronously serializes something by reference into a wrapped AsyncWrite.
@@ -60,7 +60,7 @@ pub trait AsyncSerializeRefLen<'val, W: AsyncWrite>
     : AsyncSerializeRef<'val, W> + AsyncWriterFutureLen<W> {
     /// Compute the exact number of bytes that would be written in total if the given value was
     /// serialized.
-    fn total_bytes(&Self::Serialized) -> usize;
+    fn total_bytes(val: &Self::Serialized) -> usize;
 }
 
 /// An error that occured during deserialization.
