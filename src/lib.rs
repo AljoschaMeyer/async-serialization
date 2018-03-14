@@ -23,14 +23,14 @@ pub trait AsyncSerializeRef<'val, W: AsyncWrite>: Sized {
     /// The future that performs the serialization.
     type SerializeRefFuture: Future<Item = (W), Error = (W, FutIoErr)>;
 
-    /// Take a reference to a value and a writer to create a `SerializeRefFuture`.
+    /// Take a reference to a value and consume a writer to create a `SerializeRefFuture`.
     fn serialize_future_ref(&'val self, writer: W) -> Self::SerializeRefFuture;
 }
 
 /// A type whose values can be serialized into an `AsyncWrite`, where the exact number of bytes to
 /// write can be computed in advance.
 pub trait AsyncSerializeLen<W: AsyncWrite>: Sized + AsyncSerialize<W> {
-    /// Compute the exact legth of the serialized value in bytes.
+    /// Compute the exact length of the serialized value in bytes.
     fn serialized_len(&self) -> usize;
 }
 
@@ -38,21 +38,21 @@ pub trait AsyncSerializeLen<W: AsyncWrite>: Sized + AsyncSerialize<W> {
 /// of bytes to write can be computed in advance.
 pub trait AsyncSerializeRefLen<'val, W: AsyncWrite>
     : Sized + AsyncSerializeRef<'val, W> {
-    /// Compute the exact legth of the serialized value in bytes.
+    /// Compute the exact length of the serialized value in bytes.
     fn serialized_len(&self) -> usize;
 }
 
-/// An error that occured during deserialiation.
+/// An error that occured during deserialization.
 pub enum DeserializeError<E> {
     /// An error propagated from the underlying reader.
     ReaderError(FutIoErr),
-    /// An error for describing why the read data could not be deserialized into a value.
+    /// An error describing why the read data could not be deserialized into a value.
     DataError(E),
 }
 
 /// A type whose values can be deserialized from an `AsyncRead`.
 pub trait AsyncDeserialize<R: AsyncRead>: Sized {
-    /// The future that performs the deserialization. It yields back ownerhip of the wrapped
+    /// The future that performs the deserialization. It yields back ownership of the wrapped
     /// reader, the deserialized value, and the number of bytes it read from the reader.
     type DeserializeFuture: Future<Item = (R, Self, usize), Error = (R, DeserializeError<Self::Error>)>;
     /// The error that is emitted when reading invalid data.
