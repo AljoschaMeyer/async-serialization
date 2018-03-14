@@ -8,4 +8,5 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
+futures-core = "0.2.0-alpha"
 futures-io = "0.2.0-alpha"
