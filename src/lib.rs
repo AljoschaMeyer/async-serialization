@@ -6,6 +6,9 @@
 extern crate futures_core;
 extern crate futures_io;
 
+use std::error::Error;
+use std::fmt::{self, Display, Formatter};
+
 use futures_core::Future;
 use futures_io::{AsyncRead, AsyncWrite, Error as FutIoErr};
 
@@ -63,14 +66,6 @@ pub trait AsyncSerializeRefLen<'val, W: AsyncWrite>
     fn total_bytes(val: &Self::Serialized) -> usize;
 }
 
-/// An error that occured during deserialization.
-pub enum DeserializeError<E> {
-    /// An error propagated from the underlying reader.
-    ReaderError(FutIoErr),
-    /// An error describing why the read data could not be deserialized into a value.
-    DataError(E),
-}
-
 /// A future that asynchronously serializes something from a wrapped AsyncRead and then returns
 /// the wrapped AsyncRead, the deserialized value, and how many bytes were read.
 pub trait AsyncDeserialize<R: AsyncRead, S, E>
@@ -80,4 +75,46 @@ pub trait AsyncDeserialize<R: AsyncRead, S, E>
 
     /// Return how many bytes have already been read.
     fn already_read(&self) -> usize;
+}
+
+/// An error that occured during deserialization.
+#[derive(Debug)]
+pub enum DeserializeError<E> {
+    /// An error propagated from the underlying reader.
+    ReaderError(FutIoErr),
+    /// An error describing why the read data could not be deserialized into a value.
+    DataError(E),
+}
+
+impl<E: Display> Display for DeserializeError<E> {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        match *self {
+            DeserializeError::ReaderError(ref err) => {
+                write!(f, "Deserialize reader error: {}", err)
+            }
+            DeserializeError::DataError(ref err) => write!(f, "Deserialize data error: {}", err),
+        }
+    }
+}
+
+impl<E: Error> Error for DeserializeError<E> {
+    fn description(&self) -> &str {
+        match *self {
+            DeserializeError::ReaderError(ref err) => err.description(),
+            DeserializeError::DataError(ref err) => err.description(),
+        }
+    }
+
+    fn cause(&self) -> Option<&Error> {
+        match *self {
+            DeserializeError::ReaderError(ref err) => Some(err),
+            DeserializeError::DataError(ref err) => Some(err),
+        }
+    }
+}
+
+impl<E> From<FutIoErr> for DeserializeError<E> {
+    fn from(err: FutIoErr) -> DeserializeError<E> {
+        DeserializeError::ReaderError(err)
+    }
 }
