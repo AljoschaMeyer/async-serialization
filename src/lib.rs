@@ -37,6 +37,14 @@ pub trait AsyncSerialize<W: AsyncWrite>: AsyncWriterFuture<W> {
     fn new(writer: W, val: Self::Serialized) -> Self;
 }
 
+/// An `AsyncSerialize` that can precompute the exact number of bytes to write.
+pub trait AsyncSerializeLen<W: AsyncWrite>
+    : AsyncSerialize<W> + AsyncWriterFutureLen<W> {
+    /// Compute the exact number of bytes that would be written in total if the given value was
+    /// serialized.
+    fn total_bytes(&Self::Serialized) -> usize;
+}
+
 /// A future that asynchronously serializes something by reference into a wrapped AsyncWrite.
 pub trait AsyncSerializeRef<'val, W: AsyncWrite>: AsyncWriterFuture<W> {
     /// The type of values serialized.
@@ -47,6 +55,14 @@ pub trait AsyncSerializeRef<'val, W: AsyncWrite>: AsyncWriterFuture<W> {
     fn new(writer: W, val: &'val Self::Serialized) -> Self;
 }
 
+/// An `AsyncSerializeRef` that can precompute the exact number of bytes to write.
+pub trait AsyncSerializeRefLen<'val, W: AsyncWrite>
+    : AsyncSerializeRef<'val, W> + AsyncWriterFutureLen<W> {
+    /// Compute the exact number of bytes that would be written in total if the given value was
+    /// serialized.
+    fn total_bytes(&Self::Serialized) -> usize;
+}
+
 /// An error that occured during deserialization.
 pub enum DeserializeError<E> {
     /// An error propagated from the underlying reader.
@@ -54,6 +70,8 @@ pub enum DeserializeError<E> {
     /// An error describing why the read data could not be deserialized into a value.
     DataError(E),
 }
+
+// TODO update this to be the future itself
 
 /// A type whose values can be deserialized from an `AsyncRead`.
 pub trait AsyncDeserialize<R: AsyncRead>: Sized {
