@@ -6,7 +6,6 @@ description = "Traits for serializing into AsyncWrites and deserializing from As
 repository = "https://github.com/AljoschaMeyer/async-serialization"
 readme = "README.md"
 license = "MIT"
-publish = false
 
 [dependencies]
 futures-core = "0.2.0-alpha"

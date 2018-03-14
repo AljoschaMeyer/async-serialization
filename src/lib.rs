@@ -9,37 +9,42 @@ extern crate futures_io;
 use futures_core::Future;
 use futures_io::{AsyncRead, AsyncWrite, Error as FutIoErr};
 
-/// A type whose values can be serialized into an `AsyncWrite`.
-pub trait AsyncSerialize<W: AsyncWrite>: Sized {
-    /// The future that performs the serialization.
-    type SerializeFuture: Future<Item = (W, Self), Error = (W, FutIoErr)>;
-
-    /// Consume a value and a writer to create a `SerializeFuture`.
-    fn into_serialize_future(self, writer: W) -> Self::SerializeFuture;
+/// Base trait for futures that write things into `AsyncWrite`s.
+///
+/// The future must yield a previously wrapped `AsyncWrite`, and the number of written bytes.
+/// If there's an error upon writing, the wrapped `AsyncWrite` is emitted together with the error.
+pub trait AsyncWriterFuture<W: AsyncWrite>
+    : Future<Item = (W, usize), Error = (W, FutIoErr)> {
+    /// Return how many bytes have already been written.
+    fn already_written(&self) -> usize;
 }
 
-/// A type whose values can be serialized by reference into an `AsyncWrite`.
-pub trait AsyncSerializeRef<'val, W: AsyncWrite>: Sized {
-    /// The future that performs the serialization.
-    type SerializeRefFuture: Future<Item = (W), Error = (W, FutIoErr)>;
-
-    /// Take a reference to a value and consume a writer to create a `SerializeRefFuture`.
-    fn serialize_future_ref(&'val self, writer: W) -> Self::SerializeRefFuture;
+/// Base trait for futures that write things into `AsyncWrite`s and can precompute the exact number
+/// of bytes to write.
+pub trait AsyncWriterFutureLen<W: AsyncWrite>: AsyncWriterFuture<W> {
+    /// Compute the exact number of bytes that will still be written by this future.
+    fn remaining_bytes(&self) -> usize;
 }
 
-/// A type whose values can be serialized into an `AsyncWrite`, where the exact number of bytes to
-/// write can be computed in advance.
-pub trait AsyncSerializeLen<W: AsyncWrite>: Sized + AsyncSerialize<W> {
-    /// Compute the exact length of the serialized value in bytes.
-    fn serialized_len(&self) -> usize;
+/// A future that asynchronously serializes something into a wrapped AsyncWrite and then returns
+/// the wrapped AsyncWrite and how many bytes were written.
+pub trait AsyncSerialize<W: AsyncWrite>: AsyncWriterFuture<W> {
+    /// The type of values serialized.
+    type Serialized;
+
+    /// Create a new instance, consuming the value to serialize and wrapping the `AsyncWrite` to
+    /// serialize into.
+    fn new(writer: W, val: Self::Serialized) -> Self;
 }
 
-/// A type whose values can be serialized by reference into an `AsyncWrite`, where the exact number
-/// of bytes to write can be computed in advance.
-pub trait AsyncSerializeRefLen<'val, W: AsyncWrite>
-    : Sized + AsyncSerializeRef<'val, W> {
-    /// Compute the exact length of the serialized value in bytes.
-    fn serialized_len(&self) -> usize;
+/// A future that asynchronously serializes something by reference into a wrapped AsyncWrite.
+pub trait AsyncSerializeRef<'val, W: AsyncWrite>: AsyncWriterFuture<W> {
+    /// The type of values serialized.
+    type Serialized;
+
+    /// Create a new instance, taking a reference to the value to serialize and wrapping the
+    /// `AsyncWrite` to serialize into.
+    fn new(writer: W, val: &'val Self::Serialized) -> Self;
 }
 
 /// An error that occured during deserialization.
@@ -60,4 +65,7 @@ pub trait AsyncDeserialize<R: AsyncRead>: Sized {
 
     /// Consume a reader to create a `DeserializeFuture`.
     fn deserialize_future(reader: R) -> Self::DeserializeFuture;
+
+    /// Return how many bytes have already been read.
+    fn already_read(&self) -> usize;
 }
