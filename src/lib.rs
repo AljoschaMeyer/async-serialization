@@ -34,7 +34,7 @@ pub trait AsyncSerialize<W: AsyncWrite>: AsyncWriterFuture<W> {
 
     /// Create a new instance, consuming the value to serialize and wrapping the `AsyncWrite` to
     /// serialize into.
-    fn new(writer: W, val: Self::Serialized) -> Self;
+    fn new(writer: W, val: Self::Serialized) -> Self; // TODO rename
 }
 
 /// An `AsyncSerialize` that can precompute the exact number of bytes to write.
@@ -52,7 +52,7 @@ pub trait AsyncSerializeRef<'val, W: AsyncWrite>: AsyncWriterFuture<W> {
 
     /// Create a new instance, taking a reference to the value to serialize and wrapping the
     /// `AsyncWrite` to serialize into.
-    fn new(writer: W, val: &'val Self::Serialized) -> Self;
+    fn new(writer: W, val: &'val Self::Serialized) -> Self; // TODO rename
 }
 
 /// An `AsyncSerializeRef` that can precompute the exact number of bytes to write.
@@ -71,18 +71,12 @@ pub enum DeserializeError<E> {
     DataError(E),
 }
 
-// TODO update this to be the future itself
-
-/// A type whose values can be deserialized from an `AsyncRead`.
-pub trait AsyncDeserialize<R: AsyncRead>: Sized {
-    /// The future that performs the deserialization. It yields back ownership of the wrapped
-    /// reader, the deserialized value, and the number of bytes it read from the reader.
-    type DeserializeFuture: Future<Item = (R, Self, usize), Error = (R, DeserializeError<Self::Error>)>;
-    /// The error that is emitted when reading invalid data.
-    type Error;
-
-    /// Consume a reader to create a `DeserializeFuture`.
-    fn deserialize_future(reader: R) -> Self::DeserializeFuture;
+/// A future that asynchronously serializes something into a wrapped AsyncWrite and then returns
+/// the wrapped AsyncWrite and how many bytes were written.
+pub trait AsyncDeserialize<R: AsyncRead, S, E>
+    : Future<Item = (R, S, usize), Error = (R, DeserializeError<E>)> {
+    /// Consume a reader to create an `AsyncDeserialize`.
+    fn from_reader(reader: R) -> Self;
 
     /// Return how many bytes have already been read.
     fn already_read(&self) -> usize;
