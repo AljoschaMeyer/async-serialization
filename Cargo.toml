@@ -1,6 +1,6 @@
 [package]
 name = "async-serialization"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["AljoschaMeyer <mail@aljoscha-meyer.de>"]
 description = "Traits for serializing into AsyncWrites and deserializing from AsyncReads."
 repository = "https://github.com/AljoschaMeyer/async-serialization"
