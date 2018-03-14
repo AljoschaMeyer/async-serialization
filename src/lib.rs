@@ -34,7 +34,7 @@ pub trait AsyncSerialize<W: AsyncWrite>: AsyncWriterFuture<W> {
 
     /// Create a new instance, consuming the value to serialize and wrapping the `AsyncWrite` to
     /// serialize into.
-    fn new(writer: W, val: Self::Serialized) -> Self; // TODO rename
+    fn from_val(writer: W, val: Self::Serialized) -> Self;
 }
 
 /// An `AsyncSerialize` that can precompute the exact number of bytes to write.
@@ -52,7 +52,7 @@ pub trait AsyncSerializeRef<'val, W: AsyncWrite>: AsyncWriterFuture<W> {
 
     /// Create a new instance, taking a reference to the value to serialize and wrapping the
     /// `AsyncWrite` to serialize into.
-    fn new(writer: W, val: &'val Self::Serialized) -> Self; // TODO rename
+    fn from_ref(writer: W, val: &'val Self::Serialized) -> Self;
 }
 
 /// An `AsyncSerializeRef` that can precompute the exact number of bytes to write.
