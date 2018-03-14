@@ -71,8 +71,8 @@ pub enum DeserializeError<E> {
     DataError(E),
 }
 
-/// A future that asynchronously serializes something into a wrapped AsyncWrite and then returns
-/// the wrapped AsyncWrite and how many bytes were written.
+/// A future that asynchronously serializes something from a wrapped AsyncRead and then returns
+/// the wrapped AsyncRead, the deserialized value, and how many bytes were read.
 pub trait AsyncDeserialize<R: AsyncRead, S, E>
     : Future<Item = (R, S, usize), Error = (R, DeserializeError<E>)> {
     /// Consume a reader to create an `AsyncDeserialize`.
