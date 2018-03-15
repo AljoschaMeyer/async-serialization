@@ -3,6 +3,8 @@
 //! and it saves a step of copying.
 #![deny(missing_docs)]
 
+#![deprecated="This was a failed attempt at finding a suitable abstraction. The async-codec crate might be what you need instead."]
+
 extern crate futures_core;
 extern crate futures_io;
 
